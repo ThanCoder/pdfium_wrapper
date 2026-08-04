@@ -1,4 +1,4 @@
-name: Build PDFium Wrapper - Linux ARM64
+name: Build PDFium Wrapper - Linux x86_64
 
 on:
   workflow_dispatch:
@@ -13,9 +13,10 @@ env:
 
 jobs:
   build-linux-arm64:
-    name: Linux ARM64
+    name: Linux x86_64
 
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
+    
 
     steps:
       # ========================================================
