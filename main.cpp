@@ -24,6 +24,7 @@ void writeFile(std::vector<uint8_t> &data, const std::string path) {
 
 int main() {
   FPDF_InitLibrary();
+  
 
   auto core = new PdfCore();
   core->openFile("/home/thancoder/Documents/test.pdf");

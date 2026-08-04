@@ -1,12 +1,7 @@
-name: Build PDFium Wrapper - Linux
+```yaml
+name: Build PDFium Wrapper - Linux ARM64
 
 on:
-  push:
-    branches:
-      - main
-
-  pull_request:
-
   workflow_dispatch:
     inputs:
       pdfium_version:
@@ -15,41 +10,26 @@ on:
         default: "7988"
 
 env:
-  PDFIUM_VERSION: ${{ inputs.pdfium_version || '7988' }}
+  PDFIUM_VERSION: ${{ inputs.pdfium_version }}
 
 jobs:
+  build-linux-arm64:
+    name: Linux ARM64
 
-  linux:
-    name: Linux ${{ matrix.arch }}
-
-    runs-on: ubuntu-24.04
-
-    strategy:
-      fail-fast: false
-
-      matrix:
-        include:
-
-          - arch: x64
-            package: pdfium-linux-x64
-            compiler: native
-
-          - arch: arm64
-            package: pdfium-linux-arm64
-            compiler: cross
+    # GitHub-hosted ARM64 runner
+    runs-on: ubuntu-24.04-arm
 
     steps:
-
-      # ======================================================
+      # --------------------------------------------------------
       # Checkout
-      # ======================================================
+      # --------------------------------------------------------
 
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ======================================================
-      # Dependencies
-      # ======================================================
+      # --------------------------------------------------------
+      # Install dependencies
+      # --------------------------------------------------------
 
       - name: Install dependencies
         run: |
@@ -58,138 +38,165 @@ jobs:
           sudo apt-get install -y \
             cmake \
             ninja-build \
-            clang \
+            build-essential \
+            pkg-config \
             curl \
-            tar \
-            file
+            tar
 
-      # ======================================================
-      # ARM64 compiler
-      # ======================================================
-
-      - name: Install ARM64 compiler
-        if: matrix.compiler == 'cross'
-        run: |
-          sudo apt-get install -y \
-            gcc-aarch64-linux-gnu \
-            g++-aarch64-linux-gnu
-
-      # ======================================================
-      # Download PDFium
-      # ======================================================
+      # --------------------------------------------------------
+      # Download PDFium ARM64
+      # --------------------------------------------------------
 
       - name: Download PDFium
-        env:
-          PDFIUM_PACKAGE: ${{ matrix.package }}
         run: |
-          chmod +x .github/scripts/download-pdfium.sh
+          set -eux
 
-          .github/scripts/download-pdfium.sh
+          PDFIUM_URL="https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-linux-arm64.tgz"
 
-      # ======================================================
-      # Verify
-      # ======================================================
+          echo "Downloading:"
+          echo "$PDFIUM_URL"
+
+          curl \
+            --fail \
+            --location \
+            --retry 3 \
+            --retry-delay 2 \
+            "$PDFIUM_URL" \
+            --output pdfium.tgz
+
+      # --------------------------------------------------------
+      # Extract PDFium
+      # --------------------------------------------------------
+
+      - name: Extract PDFium
+        run: |
+          set -eux
+
+          tar \
+            -xzf pdfium.tgz
+
+          rm -f pdfium.tgz
+
+          echo "PDFium files:"
+          find pdfium-linux-arm64 -maxdepth 2 -type f | sort
+
+      # --------------------------------------------------------
+      # Verify PDFium
+      # --------------------------------------------------------
 
       - name: Verify PDFium
         run: |
-          echo "PDFIUM_ROOT=$PDFIUM_ROOT"
-          echo "PDFIUM_INCLUDE=$PDFIUM_INCLUDE"
-          echo "PDFIUM_LIB=$PDFIUM_LIB"
-          echo "PDFIUM_LIBRARY=$PDFIUM_LIBRARY"
+          set -eux
 
-          test -d "$PDFIUM_INCLUDE"
-          test -d "$PDFIUM_LIB"
-          test -f "$PDFIUM_LIBRARY"
+          test -f \
+            "pdfium-linux-arm64/lib/libpdfium.so"
 
-          file "$PDFIUM_LIBRARY"
+          file \
+            "pdfium-linux-arm64/lib/libpdfium.so"
 
-      # ======================================================
-      # Configure x64
-      # ======================================================
+          nm -D \
+            "pdfium-linux-arm64/lib/libpdfium.so" \
+            | grep "FPDF_InitLibrary"
 
-      - name: Configure x64
-        if: matrix.arch == 'x64'
+      # --------------------------------------------------------
+      # Configure
+      # --------------------------------------------------------
+
+      - name: Configure CMake
         run: |
+          set -eux
+
           cmake \
             -S . \
             -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DPDFIUM_ROOT="$PDFIUM_ROOT"
+            -DPDFIUM_ROOT="$PWD/pdfium-linux-arm64"
 
-      # ======================================================
-      # Configure ARM64
-      # ======================================================
-
-      - name: Configure arm64
-        if: matrix.arch == 'arm64'
-        run: |
-          cmake \
-            -S . \
-            -B build \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_SYSTEM_NAME=Linux \
-            -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-            -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
-            -DPDFIUM_ROOT="$PDFIUM_ROOT"
-
-      # ======================================================
+      # --------------------------------------------------------
       # Build
-      # ======================================================
+      # --------------------------------------------------------
 
       - name: Build
         run: |
+          set -eux
+
           cmake \
             --build build \
             --parallel
 
-      # ======================================================
+      # --------------------------------------------------------
       # Verify wrapper
-      # ======================================================
+      # --------------------------------------------------------
 
       - name: Verify wrapper
         run: |
-          test -f build/libpdfium_wrapper.so
+          set -eux
+
+          test -f \
+            "build/libpdfium_wrapper.so"
 
           file \
-            build/libpdfium_wrapper.so
+            "build/libpdfium_wrapper.so"
 
-      # ======================================================
+          nm -D \
+            "build/libpdfium_wrapper.so" \
+            | grep " pdfium_init$"
+
+          readelf -d \
+            "build/libpdfium_wrapper.so" \
+            | grep -E 'RPATH|RUNPATH'
+
+      # --------------------------------------------------------
       # Package
-      # ======================================================
+      # --------------------------------------------------------
 
-      - name: Package
+      - name: Prepare package
         run: |
-          mkdir -p "dist/linux-${{ matrix.arch }}"
+          set -eux
 
+          mkdir -p dist/lib
+
+          # Wrapper
           cp \
             build/libpdfium_wrapper.so \
-            "dist/linux-${{ matrix.arch }}/"
+            dist/lib/
 
-          # PDFium may contain additional .so dependencies.
+          # PDFium + dependencies
           cp \
-            "$PDFIUM_LIB"/*.so \
-            "dist/linux-${{ matrix.arch }}/"
+            pdfium-linux-arm64/lib/*.so \
+            dist/lib/
 
-          cp \
-            src/ffi/ffi_wrapper.h \
-            "dist/linux-${{ matrix.arch }}/"
+          echo "Package contents:"
+          find dist -type f -maxdepth 3 | sort
 
-          tar \
-            -czf \
-            "pdfium-wrapper-linux-${{ matrix.arch }}.tar.gz" \
-            -C dist \
-            "linux-${{ matrix.arch }}"
+      # --------------------------------------------------------
+      # Verify architecture
+      # --------------------------------------------------------
 
-      # ======================================================
-      # Artifact
-      # ======================================================
+      - name: Verify package
+        run: |
+          set -eux
 
-      - name: Upload artifact
+          file dist/lib/*.so
+
+          echo
+          echo "Wrapper dependencies:"
+          ldd dist/lib/libpdfium_wrapper.so
+
+          echo
+          echo "Exported wrapper symbols:"
+          nm -D dist/lib/libpdfium_wrapper.so \
+            | grep -E ' pdfium_init$'
+
+      # --------------------------------------------------------
+      # Upload artifact
+      # --------------------------------------------------------
+
+      - name: Upload Linux ARM64 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pdfium-wrapper-linux-${{ matrix.arch }}
-          path: pdfium-wrapper-linux-${{ matrix.arch }}.tar.gz
+          name: pdfium-wrapper-linux-arm64
+          path: dist/
           if-no-files-found: error
+```
