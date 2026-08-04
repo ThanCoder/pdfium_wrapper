@@ -2,6 +2,8 @@
 
 set -e
 
+PDFIUM_ROOT="/home/thancoder/Documents/pdfium-linux-x64"
+
 OUTPUT_DIR="dist_binaries"
 OUTPUT_LIB_NAME="libpdf_engine"
 
@@ -17,7 +19,8 @@ mkdir -p "$BUILD_DIR"
 cmake \
   -S . \
   -B "$BUILD_DIR" \
-  -DCMAKE_BUILD_TYPE=MinSizeRel
+  -DCMAKE_BUILD_TYPE=MinSizeRel\
+  -DPDFIUM_ROOT="$PDFIUM_ROOT"
 
 cmake \
   --build "$BUILD_DIR" \

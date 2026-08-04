@@ -1,0 +1,7 @@
+/home/thancoder/projects/cpp_projs/pdfium_wrapper/build_temp_linux/CMakeFiles/pdfium_wrapper.dir
+/home/thancoder/projects/cpp_projs/pdfium_wrapper/build_temp_linux/CMakeFiles/edit_cache.dir
+/home/thancoder/projects/cpp_projs/pdfium_wrapper/build_temp_linux/CMakeFiles/rebuild_cache.dir
+/home/thancoder/projects/cpp_projs/pdfium_wrapper/build_temp_linux/CMakeFiles/list_install_components.dir
+/home/thancoder/projects/cpp_projs/pdfium_wrapper/build_temp_linux/CMakeFiles/install.dir
+/home/thancoder/projects/cpp_projs/pdfium_wrapper/build_temp_linux/CMakeFiles/install/local.dir
+/home/thancoder/projects/cpp_projs/pdfium_wrapper/build_temp_linux/CMakeFiles/install/strip.dir
