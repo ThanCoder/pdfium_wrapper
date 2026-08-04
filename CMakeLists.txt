@@ -7,126 +7,125 @@ project(
 )
 
 set(CMAKE_C_STANDARD 11)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ============================================================
-# Options
+# PDFium
+#
+# Expected:
+#
+# PDFIUM_ROOT/
+# ├── include/
+# │   └── *.h
+# │
+# └── lib/
+#     ├── libpdfium.so
+#     └── *.so
+#
 # ============================================================
 
-set(PDFIUM_ROOT
+set(
+    PDFIUM_ROOT
     ""
     CACHE PATH
-    "PDFium extracted root directory"
+    "Path to extracted PDFium"
 )
 
 if(NOT PDFIUM_ROOT)
     message(FATAL_ERROR
-        "PDFIUM_ROOT is required."
+        "PDFIUM_ROOT is required"
     )
 endif()
 
-# ============================================================
-# PDFium include directory
-# ============================================================
-
-set(PDFIUM_INCLUDE_DIR
+set(
+    PDFIUM_INCLUDE_DIR
     "${PDFIUM_ROOT}/include"
 )
 
-if(NOT EXISTS "${PDFIUM_INCLUDE_DIR}")
+set(
+    PDFIUM_LIB_DIR
+    "${PDFIUM_ROOT}/lib"
+)
+
+# ============================================================
+# Validate PDFium
+# ============================================================
+
+if(NOT IS_DIRECTORY "${PDFIUM_INCLUDE_DIR}")
     message(FATAL_ERROR
         "PDFium include directory not found:\n"
         "  ${PDFIUM_INCLUDE_DIR}"
     )
 endif()
 
-# ============================================================
-# Find PDFium binary
-# ============================================================
-
-if(WIN32)
-
-    set(PDFIUM_CANDIDATES
-        "${PDFIUM_ROOT}/bin/pdfium.dll"
-        "${PDFIUM_ROOT}/lib/pdfium.dll"
-        "${PDFIUM_ROOT}/pdfium.dll"
+if(NOT IS_DIRECTORY "${PDFIUM_LIB_DIR}")
+    message(FATAL_ERROR
+        "PDFium lib directory not found:\n"
+        "  ${PDFIUM_LIB_DIR}"
     )
-
-elseif(APPLE)
-
-    set(PDFIUM_CANDIDATES
-        "${PDFIUM_ROOT}/lib/libpdfium.dylib"
-        "${PDFIUM_ROOT}/bin/libpdfium.dylib"
-        "${PDFIUM_ROOT}/lib/pdfium.dylib"
-        "${PDFIUM_ROOT}/lib/libpdfium.a"
-    )
-
-else()
-
-    set(PDFIUM_CANDIDATES
-        "${PDFIUM_ROOT}/lib/libpdfium.so"
-        "${PDFIUM_ROOT}/lib/libpdfium.a"
-        "${PDFIUM_ROOT}/bin/libpdfium.so"
-    )
-
 endif()
 
-set(PDFIUM_LIBRARY "")
+# ============================================================
+# Find libpdfium
+# ============================================================
 
-foreach(candidate ${PDFIUM_CANDIDATES})
-    if(EXISTS "${candidate}")
-        set(PDFIUM_LIBRARY "${candidate}")
-        break()
-    endif()
-endforeach()
+find_library(
+    PDFIUM_LIBRARY
+    NAMES pdfium
+    PATHS
+        "${PDFIUM_LIB_DIR}"
+    NO_DEFAULT_PATH
+)
 
 if(NOT PDFIUM_LIBRARY)
     message(FATAL_ERROR
-        "Could not find PDFium library under:\n"
-        "  ${PDFIUM_ROOT}\n"
-        "Expected one of:\n"
-        "${PDFIUM_CANDIDATES}"
+        "libpdfium.so not found in:\n"
+        "  ${PDFIUM_LIB_DIR}"
     )
 endif()
 
+message(STATUS "")
 message(STATUS "========================================")
 message(STATUS "PDFium configuration")
 message(STATUS "========================================")
-message(STATUS "PDFIUM_ROOT         = ${PDFIUM_ROOT}")
-message(STATUS "PDFIUM_INCLUDE_DIR  = ${PDFIUM_INCLUDE_DIR}")
-message(STATUS "PDFIUM_LIBRARY      = ${PDFIUM_LIBRARY}")
+message(STATUS "PDFIUM_ROOT        = ${PDFIUM_ROOT}")
+message(STATUS "PDFIUM_INCLUDE_DIR = ${PDFIUM_INCLUDE_DIR}")
+message(STATUS "PDFIUM_LIB_DIR     = ${PDFIUM_LIB_DIR}")
+message(STATUS "PDFIUM_LIBRARY     = ${PDFIUM_LIBRARY}")
 message(STATUS "========================================")
+message(STATUS "")
 
 # ============================================================
-# Imported PDFium
+# Imported PDFium library
 # ============================================================
 
-if(PDFIUM_LIBRARY MATCHES "\\.a$")
+add_library(
+    pdfium
+    SHARED
+    IMPORTED
+    GLOBAL
+)
 
-    add_library(pdfium STATIC IMPORTED GLOBAL)
-
-else()
-
-    add_library(pdfium SHARED IMPORTED GLOBAL)
-
-endif()
-
-set_target_properties(pdfium PROPERTIES
+set_target_properties(
+    pdfium
+    PROPERTIES
 
     IMPORTED_LOCATION
-    "${PDFIUM_LIBRARY}"
+        "${PDFIUM_LIBRARY}"
 
     INTERFACE_INCLUDE_DIRECTORIES
-    "${PDFIUM_INCLUDE_DIR}"
+        "${PDFIUM_INCLUDE_DIR}"
 )
 
 # ============================================================
 # Wrapper source
 # ============================================================
 
-set(WRAPPER_SOURCES
+set(
+    PDFIUM_WRAPPER_SOURCES
 
     src/ffi/ffi_wrapper.cpp
     src/ffi/page_core_wrapper.cpp
@@ -139,51 +138,100 @@ set(WRAPPER_SOURCES
 )
 
 # ============================================================
-# Wrapper library
+# Wrapper shared library
 # ============================================================
 
-add_library(pdfium_wrapper SHARED
-    ${WRAPPER_SOURCES}
-)
+add_library(
+    pdfium_wrapper
+    SHARED
 
-target_include_directories(pdfium_wrapper
-
-    PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ffi
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/pdf
-
-    PRIVATE
-    ${PDFIUM_INCLUDE_DIR}
-)
-
-target_link_libraries(pdfium_wrapper
-    PRIVATE
-    pdfium
+    ${PDFIUM_WRAPPER_SOURCES}
 )
 
 # ============================================================
-# Platform settings
+# Include directories
+# ============================================================
+
+target_include_directories(
+    pdfium_wrapper
+
+    PRIVATE
+
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/ffi
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/pdf
+
+        ${PDFIUM_INCLUDE_DIR}
+)
+
+# ============================================================
+# Link PDFium
+# ============================================================
+
+target_link_libraries(
+    pdfium_wrapper
+
+    PRIVATE
+
+        pdfium
+)
+
+# ============================================================
+# Linux
 # ============================================================
 
 if(UNIX AND NOT APPLE)
 
-    set_target_properties(pdfium_wrapper PROPERTIES
-        BUILD_RPATH "$ORIGIN"
-        INSTALL_RPATH "$ORIGIN"
+    set_target_properties(
+        pdfium_wrapper
+
+        PROPERTIES
+
+        BUILD_RPATH
+            "$ORIGIN"
+
+        INSTALL_RPATH
+            "$ORIGIN"
+
+        BUILD_WITH_INSTALL_RPATH
+            TRUE
     )
 
-elseif(APPLE)
+endif()
 
-    set_target_properties(pdfium_wrapper PROPERTIES
-        BUILD_RPATH "@loader_path"
-        INSTALL_RPATH "@loader_path"
+# ============================================================
+# macOS / iOS
+# ============================================================
+
+if(APPLE)
+
+    set_target_properties(
+        pdfium_wrapper
+
+        PROPERTIES
+
+        BUILD_RPATH
+            "@loader_path"
+
+        INSTALL_RPATH
+            "@loader_path"
     )
 
-elseif(WIN32)
+endif()
 
-    set_target_properties(pdfium_wrapper PROPERTIES
-        WINDOWS_EXPORT_ALL_SYMBOLS ON
+# ============================================================
+# Windows
+# ============================================================
+
+if(WIN32)
+
+    set_target_properties(
+        pdfium_wrapper
+
+        PROPERTIES
+
+        WINDOWS_EXPORT_ALL_SYMBOLS
+            ON
     )
 
 endif()
@@ -192,16 +240,13 @@ endif()
 # Output
 # ============================================================
 
-set_target_properties(pdfium_wrapper PROPERTIES
+set_target_properties(
+    pdfium_wrapper
+
+    PROPERTIES
 
     OUTPUT_NAME
-    "pdfium_wrapper"
-
-    VERSION
-    ${PROJECT_VERSION}
-
-    SOVERSION
-    1
+        "pdfium_wrapper"
 )
 
 # ============================================================
@@ -211,15 +256,23 @@ set_target_properties(pdfium_wrapper PROPERTIES
 include(GNUInstallDirs)
 
 install(
-    TARGETS pdfium_wrapper
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    TARGETS
+        pdfium_wrapper
+
+    LIBRARY
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
+
+    RUNTIME
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+
+    ARCHIVE
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
 install(
-    FILES
-    src/ffi/ffi_wrapper.h
+    DIRECTORY
+        "${PDFIUM_INCLUDE_DIR}/"
+
     DESTINATION
-    ${CMAKE_INSTALL_INCLUDEDIR}/pdfium_wrapper
+        "${CMAKE_INSTALL_INCLUDEDIR}/pdfium"
 )

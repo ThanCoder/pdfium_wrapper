@@ -3,7 +3,7 @@
 https://github.com/bblanchon/pdfium-binaries/releases/tag/chromium%2F7988
 
 
-pdfium lib.so ထဲက zig path က ->-----> pdfium-linux-x64/lib/libpdfium.so
+pdfium lib.so ထဲက zig path က ->-----> /lib/libpdfium.so
 
 သူနဲ့ အသုံးပြုမယ့် lib url 
 
