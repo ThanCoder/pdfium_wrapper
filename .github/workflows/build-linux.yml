@@ -1,4 +1,3 @@
-```yaml
 name: Build PDFium Wrapper - Linux ARM64
 
 on:
@@ -199,4 +198,4 @@ jobs:
           name: pdfium-wrapper-linux-arm64
           path: dist/
           if-no-files-found: error
-```
+
