@@ -3,11 +3,28 @@
 https://github.com/bblanchon/pdfium-binaries/releases/tag/chromium%2F7988
 
 
+pdfium lib.so ထဲက zig path က ->-----> pdfium-linux-x64/lib/libpdfium.so
+
+သူနဲ့ အသုံးပြုမယ့် lib url 
+
+https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7988/pdfium-linux-arm64.tgz
+
+https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7988/pdfium-android-arm.tgz
+https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7988/pdfium-android-arm64.tgz
+
+https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7988/pdfium-win-x64.tgz
+
+https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7988/pdfium-mac-arm64.tgz
+
+https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7988/pdfium-ios-device-arm64.tgz
+
 pdfium_wrapper/
 │
 ├── CMakeLists.txt
 │
 ├── src/
+        include/*h
+
 │   ├── ffi/
 │   │   ├── ffi_wrapper.h
 │   │   ├── ffi_wrapper.cpp

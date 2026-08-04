@@ -1,39 +1,42 @@
-name: Build Android
+name: Build PDFium Wrapper - Android
 
 on:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+
   workflow_dispatch:
-  workflow_call:
+    inputs:
+      pdfium_version:
+        description: PDFium Chromium version
+        required: false
+        default: "7988"
 
 env:
-  PDFIUM_VERSION: "7988"
-  ANDROID_NDK_VERSION: "27.0.12077973"
+  PDFIUM_VERSION: ${{ inputs.pdfium_version || '7988' }}
 
 jobs:
 
-  build:
+  android:
 
-    name: Android ${{ matrix.abi }}
+    name: Android
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
 
       matrix:
-
         include:
 
-          - abi: arm64-v8a
-            pdfium: pdfium-android-arm64.tgz
-
           - abi: armeabi-v7a
-            pdfium: pdfium-android-arm.tgz
+            pdfium: pdfium-android-arm
 
-          - abi: x86_64
-            pdfium: pdfium-android-x64.tgz
-
-          - abi: x86
-            pdfium: pdfium-android-x86.tgz
+          - abi: arm64-v8a
+            pdfium: pdfium-android-arm64
 
     steps:
 
@@ -46,84 +49,77 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Android
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install NDK
         run: |
-
           sdkmanager \
             "platform-tools" \
-            "platforms;android-24" \
-            "ndk;${ANDROID_NDK_VERSION}"
+            "platforms;android-35" \
+            "build-tools;35.0.0" \
+            "ndk;27.0.12077973"
 
       - name: Set NDK
         run: |
-
-          echo \
-            "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/${ANDROID_NDK_VERSION}" \
-            >> "$GITHUB_ENV"
+          echo "ANDROID_NDK=$ANDROID_SDK_ROOT/ndk/27.0.12077973" >> "$GITHUB_ENV"
 
       - name: Download PDFium
+        env:
+          PDFIUM_PACKAGE: ${{ matrix.pdfium }}
         run: |
-
-          mkdir -p third_party/pdfium
-
-          curl -L \
-            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/${{ matrix.pdfium }}" \
-            -o pdfium.tgz
-
-          tar -xzf pdfium.tgz \
-            -C third_party/pdfium
-
-      - name: Inspect PDFium
-        run: |
-
-          find third_party/pdfium \
-            -maxdepth 4 \
-            -type f \
-            | sort
+          chmod +x .github/scripts/download-pdfium.sh
+          .github/scripts/download-pdfium.sh
 
       - name: Configure
         run: |
-
           cmake \
             -S . \
             -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_ROOT/build/cmake/android.toolchain.cmake" \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI="${{ matrix.abi }}" \
-            -DANDROID_PLATFORM=android-24 \
-            -DPDFIUM_DIR="$PWD/third_party/pdfium"
+            -DANDROID_PLATFORM=android-21 \
+            -DPDFIUM_ROOT="$GITHUB_WORKSPACE/.pdfium/${{ matrix.pdfium }}"
 
       - name: Build
         run: |
-
           cmake \
             --build build \
             --parallel
 
       - name: Verify
         run: |
-
-          test -f build/libpdfium_wrapper.so
-
-          file \
-            build/libpdfium_wrapper.so
+          file build/libpdfium_wrapper.so
 
       - name: Package
         run: |
+          mkdir -p dist/android/${{ matrix.abi }}
 
-          mkdir -p \
-            "dist/android/${{ matrix.abi }}"
+          cp build/libpdfium_wrapper.so \
+            dist/android/${{ matrix.abi }}/
 
-          cp \
-            build/libpdfium_wrapper.so \
-            "dist/android/${{ matrix.abi }}/"
+          cp src/ffi/ffi_wrapper.h \
+            dist/android/${{ matrix.abi }}/
+
+          # Copy PDFium binary if it exists as libpdfium.so.
+          if [ -f ".pdfium/${{ matrix.pdfium }}/lib/libpdfium.so" ]; then
+            cp \
+              ".pdfium/${{ matrix.pdfium }}/lib/libpdfium.so" \
+              "dist/android/${{ matrix.abi }}/"
+          fi
+
+          tar \
+            -czf \
+            "pdfium-wrapper-android-${{ matrix.abi }}.tar.gz" \
+            -C dist \
+            android
 
       - name: Upload
         uses: actions/upload-artifact@v4
+
         with:
           name: pdfium-wrapper-android-${{ matrix.abi }}
-          path: dist/android/${{ matrix.abi }}/libpdfium_wrapper.so
+          path: pdfium-wrapper-android-${{ matrix.abi }}.tar.gz
+          if-no-files-found: error

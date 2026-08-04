@@ -1,26 +1,26 @@
-name: Build All
+name: Build All PDFium Wrappers
 
 on:
+
   workflow_dispatch:
+
+  push:
+    tags:
+      - "v*"
 
 jobs:
 
   linux:
-    name: Build Linux
     uses: ./.github/workflows/build-linux.yml
 
   android:
-    name: Build Android
     uses: ./.github/workflows/build-android.yml
 
   windows:
-    name: Build Windows
     uses: ./.github/workflows/build-windows.yml
 
   macos:
-    name: Build macOS
     uses: ./.github/workflows/build-macos.yml
 
   ios:
-    name: Build iOS
     uses: ./.github/workflows/build-ios.yml

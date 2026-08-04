@@ -1,18 +1,29 @@
-name: Build Linux
+name: Build PDFium Wrapper - Linux
 
 on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+
   workflow_dispatch:
-  workflow_call:
+    inputs:
+      pdfium_version:
+        description: PDFium Chromium version
+        required: false
+        default: "7988"
 
 env:
-  PDFIUM_VERSION: "7988"
+  PDFIUM_VERSION: ${{ inputs.pdfium_version || '7988' }}
 
 jobs:
 
-  build:
+  linux-x64:
 
     name: Linux x64
-    runs-on: ubuntu-latest
+
+    runs-on: ubuntu-24.04
 
     steps:
 
@@ -22,66 +33,151 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
+
           sudo apt-get install -y \
             cmake \
             ninja-build \
-            g++
+            clang \
+            curl \
+            tar \
+            file
 
       - name: Download PDFium
+        env:
+          PDFIUM_PACKAGE: pdfium-linux-x64
         run: |
-
-          mkdir -p third_party/pdfium
-
-          curl -L \
-            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-linux-x64.tgz" \
-            -o pdfium.tgz
-
-          tar -xzf pdfium.tgz \
-            -C third_party/pdfium
-
-      - name: Inspect PDFium
-        run: |
-          find third_party/pdfium \
-            -maxdepth 4 \
-            -type f \
-            | sort
+          chmod +x .github/scripts/download-pdfium.sh
+          .github/scripts/download-pdfium.sh
 
       - name: Configure
         run: |
-
           cmake \
             -S . \
             -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DPDFIUM_DIR="$PWD/third_party/pdfium"
+            -DPDFIUM_ROOT="$GITHUB_WORKSPACE/.pdfium/pdfium-linux-x64"
 
       - name: Build
         run: |
-
           cmake \
             --build build \
             --parallel
 
       - name: Verify
         run: |
+          find build -type f -name "*.so" -print
 
-          test -f build/libpdfium_wrapper.so
+          file build/libpdfium_wrapper.so
 
-          file \
-            build/libpdfium_wrapper.so
+          ldd build/libpdfium_wrapper.so || true
 
       - name: Package
         run: |
-
           mkdir -p dist/linux-x64
 
-          cp \
-            build/libpdfium_wrapper.so \
+          cp build/libpdfium_wrapper.so \
             dist/linux-x64/
+
+          cp .pdfium/pdfium-linux-x64/lib/libpdfium.so \
+            dist/linux-x64/
+
+          cp src/ffi/ffi_wrapper.h \
+            dist/linux-x64/
+
+          tar \
+            -czf \
+            pdfium-wrapper-linux-x64.tar.gz \
+            -C dist \
+            linux-x64
 
       - name: Upload
         uses: actions/upload-artifact@v4
+
         with:
           name: pdfium-wrapper-linux-x64
-          path: dist/linux-x64/libpdfium_wrapper.so
+          path: pdfium-wrapper-linux-x64.tar.gz
+          if-no-files-found: error
+
+
+  linux-arm64:
+
+    name: Linux arm64
+
+    runs-on: ubuntu-24.04
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            clang \
+            curl \
+            tar \
+            file \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu
+
+      - name: Download PDFium
+        env:
+          PDFIUM_PACKAGE: pdfium-linux-arm64
+        run: |
+          chmod +x .github/scripts/download-pdfium.sh
+          .github/scripts/download-pdfium.sh
+
+      - name: Configure
+        run: |
+          cmake \
+            -S . \
+            -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSTEM_NAME=Linux \
+            -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+            -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+            -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++ \
+            -DPDFIUM_ROOT="$GITHUB_WORKSPACE/.pdfium/pdfium-linux-arm64"
+
+      - name: Build
+        run: |
+          cmake \
+            --build build \
+            --parallel
+
+      - name: Verify
+        run: |
+          file build/libpdfium_wrapper.so
+
+      - name: Package
+        run: |
+          mkdir -p dist/linux-arm64
+
+          cp build/libpdfium_wrapper.so \
+            dist/linux-arm64/
+
+          cp .pdfium/pdfium-linux-arm64/lib/libpdfium.so \
+            dist/linux-arm64/
+
+          cp src/ffi/ffi_wrapper.h \
+            dist/linux-arm64/
+
+          tar \
+            -czf \
+            pdfium-wrapper-linux-arm64.tar.gz \
+            -C dist \
+            linux-arm64
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+
+        with:
+          name: pdfium-wrapper-linux-arm64
+          path: pdfium-wrapper-linux-arm64.tar.gz
+          if-no-files-found: error

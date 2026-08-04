@@ -1,96 +1,97 @@
-name: Build macOS
+name: Build PDFium Wrapper - macOS
 
 on:
+
+  push:
+    branches:
+      - main
+
+  pull_request:
+
   workflow_dispatch:
-  workflow_call:
+    inputs:
+      pdfium_version:
+        description: PDFium Chromium version
+        required: false
+        default: "7988"
 
 env:
-  PDFIUM_VERSION: "7988"
+  PDFIUM_VERSION: ${{ inputs.pdfium_version || '7988' }}
 
 jobs:
 
-  build:
+  macos-arm64:
 
-    name: macOS ${{ matrix.arch }}
+    name: macOS arm64
 
-    runs-on: macos-latest
-
-    strategy:
-      fail-fast: false
-
-      matrix:
-
-        include:
-
-          - arch: arm64
-            pdfium: pdfium-mac-arm64.tgz
-
-          - arch: x64
-            pdfium: pdfium-mac-x64.tgz
+    runs-on: macos-14
 
     steps:
 
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          brew install cmake ninja
+
       - name: Download PDFium
+        env:
+          PDFIUM_PACKAGE: pdfium-mac-arm64
         run: |
-
-          mkdir -p third_party/pdfium
-
-          curl -L \
-            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/${{ matrix.pdfium }}" \
-            -o pdfium.tgz
-
-          tar -xzf pdfium.tgz \
-            -C third_party/pdfium
-
-      - name: Inspect PDFium
-        run: |
-
-          find third_party/pdfium \
-            -maxdepth 4 \
-            -type f \
-            | sort
+          chmod +x .github/scripts/download-pdfium.sh
+          .github/scripts/download-pdfium.sh
 
       - name: Configure
         run: |
-
           cmake \
             -S . \
             -B build \
+            -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} \
-            -DPDFIUM_DIR="$PWD/third_party/pdfium"
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DPDFIUM_ROOT="$GITHUB_WORKSPACE/.pdfium/pdfium-mac-arm64"
 
       - name: Build
         run: |
-
           cmake \
             --build build \
-            --config Release \
             --parallel
 
       - name: Verify
         run: |
+          file build/libpdfium_wrapper.dylib
 
-          test -f build/libpdfium_wrapper.dylib
-
-          file \
+          otool \
+            -L \
             build/libpdfium_wrapper.dylib
 
       - name: Package
         run: |
+          mkdir -p dist/macos-arm64
 
-          mkdir -p \
-            "dist/macos-${{ matrix.arch }}"
+          cp build/libpdfium_wrapper.dylib \
+            dist/macos-arm64/
 
-          cp \
-            build/libpdfium_wrapper.dylib \
-            "dist/macos-${{ matrix.arch }}/"
+          if [ -f ".pdfium/pdfium-mac-arm64/lib/libpdfium.dylib" ]; then
+            cp \
+              .pdfium/pdfium-mac-arm64/lib/libpdfium.dylib \
+              dist/macos-arm64/
+          fi
+
+          cp src/ffi/ffi_wrapper.h \
+            dist/macos-arm64/
+
+          tar \
+            -czf \
+            pdfium-wrapper-macos-arm64.tar.gz \
+            -C dist \
+            macos-arm64
 
       - name: Upload
         uses: actions/upload-artifact@v4
+
         with:
-          name: pdfium-wrapper-macos-${{ matrix.arch }}
-          path: dist/macos-${{ matrix.arch }}/libpdfium_wrapper.dylib
+          name: pdfium-wrapper-macos-arm64
+          path: pdfium-wrapper-macos-arm64.tar.gz
+          if-no-files-found: error
