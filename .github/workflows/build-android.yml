@@ -23,13 +23,24 @@ jobs:
           - arch: arm
             pdfium_arch: arm
             abi: armeabi-v7a
+
           - arch: arm64
             pdfium_arch: arm64
             abi: arm64-v8a
 
     steps:
+
+      # ========================================================
+      # Checkout
+      # ========================================================
+
       - name: Checkout
         uses: actions/checkout@v4
+
+
+      # ========================================================
+      # Java
+      # ========================================================
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -37,8 +48,18 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+
+      # ========================================================
+      # Android SDK
+      # ========================================================
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+
+
+      # ========================================================
+      # Dependencies
+      # ========================================================
 
       - name: Install dependencies
         run: |
@@ -49,6 +70,14 @@ jobs:
             "platforms;android-35" \
             "build-tools;35.0.0" \
             "ndk;27.0.12077973"
+
+          echo "Installed NDKs:"
+          ls -la "$ANDROID_SDK_ROOT/ndk/"
+
+
+      # ========================================================
+      # Download PDFium
+      # ========================================================
 
       - name: Download PDFium
         run: |
@@ -62,6 +91,11 @@ jobs:
             "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-android-${{ matrix.pdfium_arch }}.tgz" \
             -o pdfium.tgz
 
+
+      # ========================================================
+      # Extract PDFium
+      # ========================================================
+
       - name: Extract PDFium
         run: |
           set -eux
@@ -74,23 +108,82 @@ jobs:
 
           rm -f pdfium.tgz
 
-          find pdfium -maxdepth 2 -type f -print
+          echo
+          echo "=== PDFium files ==="
+
+          find pdfium \
+            -type f \
+            -print \
+            | sort
+
+
+      # ========================================================
+      # Locate PDFium library
+      # ========================================================
+
+      - name: Locate PDFium
+        run: |
+          set -eux
+
+          PDFIUM_LIB="$(find "$PWD/pdfium" \
+            -type f \
+            -name "libpdfium.so" \
+            -print -quit)"
+
+          test -n "$PDFIUM_LIB"
+          test -f "$PDFIUM_LIB"
+
+          echo "PDFIUM_LIB=$PDFIUM_LIB" >> "$GITHUB_ENV"
+
+          echo
+          echo "PDFium library:"
+          echo "$PDFIUM_LIB"
+
+          file "$PDFIUM_LIB"
+
+
+      # ========================================================
+      # Verify PDFium
+      # ========================================================
 
       - name: Verify PDFium
         run: |
           set -eux
 
-          test -f pdfium/lib/libpdfium.so
-
-          file pdfium/lib/libpdfium.so
+          test -f "$PDFIUM_LIB"
 
           nm -D \
-            pdfium/lib/libpdfium.so \
+            "$PDFIUM_LIB" \
             | grep "FPDF_InitLibrary"
+
+
+      # ========================================================
+      # Configure NDK
+      # ========================================================
+
+      - name: Configure Android NDK
+        run: |
+          set -eux
+
+          export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/27.0.12077973"
+
+          test -d "$ANDROID_NDK_HOME"
+
+          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
+
+          "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++" \
+            --version
+
+
+      # ========================================================
+      # Configure CMake
+      # ========================================================
 
       - name: Configure CMake
         run: |
           set -eux
+
+          export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/27.0.12077973"
 
           cmake \
             -S . \
@@ -100,7 +193,13 @@ jobs:
             -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI="${{ matrix.abi }}" \
             -DANDROID_PLATFORM=android-21 \
-            -DPDFIUM_ROOT="$PWD/pdfium"
+            -DPDFIUM_ROOT="$PWD/pdfium" \
+            -DPDFIUM_LIBRARY="$PDFIUM_LIB"
+
+
+      # ========================================================
+      # Build
+      # ========================================================
 
       - name: Build
         run: |
@@ -110,35 +209,69 @@ jobs:
             --build build \
             --parallel
 
+
+      # ========================================================
+      # Verify Wrapper
+      # ========================================================
+
       - name: Verify Wrapper
         run: |
           set -eux
 
-          test -f build/libpdfium_wrapper.so
+          test -f \
+            "build/libpdfium_wrapper.so"
 
-          file build/libpdfium_wrapper.so
+          echo "Wrapper:"
+          file \
+            "build/libpdfium_wrapper.so"
+
+          echo
+          echo "Exported symbols:"
 
           nm -D \
-            build/libpdfium_wrapper.so \
+            "build/libpdfium_wrapper.so" \
             | grep " pdfium_init$"
+
+
+      # ========================================================
+      # Prepare artifact
+      #
+      # Only wrapper is uploaded.
+      # libpdfium.so is NOT uploaded.
+      # ========================================================
 
       - name: Prepare artifact
         run: |
           set -eux
 
-          mkdir -p dist
+          mkdir -p dist/lib
 
           cp \
             build/libpdfium_wrapper.so \
-            dist/
+            dist/lib/
 
+          # PDFium library intentionally NOT uploaded.
+          #
+          # cp \
+          #   "$PDFIUM_LIB" \
+          #   dist/lib/
+
+          echo
           echo "Artifact:"
-          find dist -type f -print
 
-      - name: Upload Android ARM ${{ matrix.arch }}
+          find dist \
+            -type f \
+            -print \
+            | sort
+
+
+      # ========================================================
+      # Upload
+      # ========================================================
+
+      - name: Upload Android ${{ matrix.arch }}
         uses: actions/upload-artifact@v4
         with:
           name: pdfium-wrapper-android-${{ matrix.arch }}
           path: dist/
           if-no-files-found: error
-
