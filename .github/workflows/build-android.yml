@@ -71,8 +71,30 @@ jobs:
             "build-tools;35.0.0" \
             "ndk;27.0.12077973"
 
+          echo
           echo "Installed NDKs:"
-          ls -la "$ANDROID_SDK_ROOT/ndk/"
+
+          ls -la \
+            "$ANDROID_SDK_ROOT/ndk/"
+
+
+      # ========================================================
+      # Configure NDK
+      # ========================================================
+
+      - name: Configure NDK
+        run: |
+          set -eux
+
+          NDK_PATH="$ANDROID_SDK_ROOT/ndk/27.0.12077973"
+
+          test -d "$NDK_PATH"
+
+          echo "NDK_PATH=$NDK_PATH" >> "$GITHUB_ENV"
+
+          echo
+          echo "NDK:"
+          echo "$NDK_PATH"
 
 
       # ========================================================
@@ -90,6 +112,8 @@ jobs:
             --retry-delay 2 \
             "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-android-${{ matrix.pdfium_arch }}.tgz" \
             -o pdfium.tgz
+
+          test -f pdfium.tgz
 
 
       # ========================================================
@@ -109,7 +133,7 @@ jobs:
           rm -f pdfium.tgz
 
           echo
-          echo "=== PDFium files ==="
+          echo "PDFium files:"
 
           find pdfium \
             -type f \
@@ -118,28 +142,29 @@ jobs:
 
 
       # ========================================================
-      # Locate PDFium library
+      # Locate PDFium
       # ========================================================
 
       - name: Locate PDFium
         run: |
           set -eux
 
-          PDFIUM_LIB="$(find "$PWD/pdfium" \
-            -type f \
-            -name "libpdfium.so" \
-            -print -quit)"
+          PDFIUM_LIB="$(
+            find "$PWD/pdfium" \
+              -type f \
+              -name "libpdfium.so" \
+              -print \
+              -quit
+          )"
 
           test -n "$PDFIUM_LIB"
           test -f "$PDFIUM_LIB"
 
-          echo "PDFIUM_LIB=$PDFIUM_LIB" >> "$GITHUB_ENV"
+          echo "PDFIUM_LIBRARY=$PDFIUM_LIB" >> "$GITHUB_ENV"
 
           echo
           echo "PDFium library:"
           echo "$PDFIUM_LIB"
-
-          file "$PDFIUM_LIB"
 
 
       # ========================================================
@@ -150,29 +175,14 @@ jobs:
         run: |
           set -eux
 
-          test -f "$PDFIUM_LIB"
+          test -f "$PDFIUM_LIBRARY"
+
+          file \
+            "$PDFIUM_LIBRARY"
 
           nm -D \
-            "$PDFIUM_LIB" \
+            "$PDFIUM_LIBRARY" \
             | grep "FPDF_InitLibrary"
-
-
-      # ========================================================
-      # Configure NDK
-      # ========================================================
-
-      - name: Configure Android NDK
-        run: |
-          set -eux
-
-          export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/27.0.12077973"
-
-          test -d "$ANDROID_NDK_HOME"
-
-          echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
-
-          "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++" \
-            --version
 
 
       # ========================================================
@@ -183,18 +193,16 @@ jobs:
         run: |
           set -eux
 
-          export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/27.0.12077973"
-
           cmake \
             -S . \
             -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
+            -DCMAKE_TOOLCHAIN_FILE="$NDK_PATH/build/cmake/android.toolchain.cmake" \
             -DANDROID_ABI="${{ matrix.abi }}" \
             -DANDROID_PLATFORM=android-21 \
             -DPDFIUM_ROOT="$PWD/pdfium" \
-            -DPDFIUM_LIBRARY="$PDFIUM_LIB"
+            -DPDFIUM_LIBRARY="$PDFIUM_LIBRARY"
 
 
       # ========================================================
@@ -211,6 +219,57 @@ jobs:
 
 
       # ========================================================
+      # Verify Wrapper Before Strip
+      # ========================================================
+
+      - name: Verify Wrapper Before Strip
+        run: |
+          set -eux
+
+          test -f \
+            build/libpdfium_wrapper.so
+
+          echo
+          echo "Wrapper before strip:"
+
+          file \
+            build/libpdfium_wrapper.so
+
+
+      # ========================================================
+      # Strip
+      # ========================================================
+
+      - name: Strip Wrapper
+        run: |
+          set -eux
+
+          LLVM_STRIP="$NDK_PATH/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
+
+          test -x "$LLVM_STRIP"
+
+          echo
+          echo "LLVM strip:"
+          "$LLVM_STRIP" --version
+
+          echo
+          echo "Before strip:"
+
+          file \
+            build/libpdfium_wrapper.so
+
+          "$LLVM_STRIP" \
+            --strip-unneeded \
+            build/libpdfium_wrapper.so
+
+          echo
+          echo "After strip:"
+
+          file \
+            build/libpdfium_wrapper.so
+
+
+      # ========================================================
       # Verify Wrapper
       # ========================================================
 
@@ -219,17 +278,19 @@ jobs:
           set -eux
 
           test -f \
-            "build/libpdfium_wrapper.so"
+            build/libpdfium_wrapper.so
 
+          echo
           echo "Wrapper:"
+
           file \
-            "build/libpdfium_wrapper.so"
+            build/libpdfium_wrapper.so
 
           echo
           echo "Exported symbols:"
 
           nm -D \
-            "build/libpdfium_wrapper.so" \
+            build/libpdfium_wrapper.so \
             | grep " pdfium_init$"
 
 
@@ -237,7 +298,7 @@ jobs:
       # Prepare artifact
       #
       # Only wrapper is uploaded.
-      # libpdfium.so is NOT uploaded.
+      # PDFium library is intentionally NOT uploaded.
       # ========================================================
 
       - name: Prepare artifact
@@ -253,7 +314,7 @@ jobs:
           # PDFium library intentionally NOT uploaded.
           #
           # cp \
-          #   "$PDFIUM_LIB" \
+          #   "$PDFIUM_LIBRARY" \
           #   dist/lib/
 
           echo

@@ -1,0 +1,495 @@
+name: Build PDFium Wrapper - iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      pdfium_version:
+        description: PDFium Chromium version
+        required: false
+        default: "7988"
+
+env:
+  PDFIUM_VERSION: ${{ inputs.pdfium_version }}
+
+jobs:
+  build-ios:
+    name: iOS XCFramework
+
+    runs-on: macos-14
+
+    steps:
+
+      # ========================================================
+      # Checkout
+      # ========================================================
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+
+      # ========================================================
+      # Dependencies
+      # ========================================================
+
+      - name: Install dependencies
+        run: |
+          set -eux
+
+          brew install \
+            cmake \
+            ninja
+
+
+      # ========================================================
+      # Download Device PDFium
+      # ========================================================
+
+      - name: Download Device PDFium
+        run: |
+          set -eux
+
+          curl \
+            --fail \
+            --location \
+            --retry 3 \
+            --retry-delay 2 \
+            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-ios-device-arm64.tgz" \
+            -o pdfium-device.tgz
+
+          test -f pdfium-device.tgz
+
+
+      # ========================================================
+      # Download Simulator PDFium
+      # ========================================================
+
+      - name: Download Simulator PDFium
+        run: |
+          set -eux
+
+          curl \
+            --fail \
+            --location \
+            --retry 3 \
+            --retry-delay 2 \
+            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-ios-simulator-arm64.tgz" \
+            -o pdfium-simulator.tgz
+
+          test -f pdfium-simulator.tgz
+
+
+      # ========================================================
+      # Extract Device PDFium
+      # ========================================================
+
+      - name: Extract Device PDFium
+        run: |
+          set -eux
+
+          mkdir -p pdfium/device
+
+          tar \
+            -xzf pdfium-device.tgz \
+            -C pdfium/device
+
+          rm -f pdfium-device.tgz
+
+          echo
+          echo "=== Device PDFium ==="
+
+          find pdfium/device \
+            -type f \
+            -print \
+            | sort
+
+
+      # ========================================================
+      # Extract Simulator PDFium
+      # ========================================================
+
+      - name: Extract Simulator PDFium
+        run: |
+          set -eux
+
+          mkdir -p pdfium/simulator
+
+          tar \
+            -xzf pdfium-simulator.tgz \
+            -C pdfium/simulator
+
+          rm -f pdfium-simulator.tgz
+
+          echo
+          echo "=== Simulator PDFium ==="
+
+          find pdfium/simulator \
+            -type f \
+            -print \
+            | sort
+
+
+      # ========================================================
+      # Locate Device PDFium
+      # ========================================================
+
+      - name: Locate Device PDFium
+        run: |
+          set -eux
+
+          PDFIUM_LIB="$(
+            find "$PWD/pdfium/device" \
+              -type f \
+              -name "libpdfium.a" \
+              -print \
+              -quit
+          )"
+
+          test -n "$PDFIUM_LIB"
+          test -f "$PDFIUM_LIB"
+
+          echo "PDFIUM_DEVICE_LIBRARY=$PDFIUM_LIB" >> "$GITHUB_ENV"
+
+          echo
+          echo "Device PDFium:"
+          echo "$PDFIUM_LIB"
+
+
+      # ========================================================
+      # Locate Simulator PDFium
+      # ========================================================
+
+      - name: Locate Simulator PDFium
+        run: |
+          set -eux
+
+          PDFIUM_LIB="$(
+            find "$PWD/pdfium/simulator" \
+              -type f \
+              -name "libpdfium.a" \
+              -print \
+              -quit
+          )"
+
+          test -n "$PDFIUM_LIB"
+          test -f "$PDFIUM_LIB"
+
+          echo "PDFIUM_SIMULATOR_LIBRARY=$PDFIUM_LIB" >> "$GITHUB_ENV"
+
+          echo
+          echo "Simulator PDFium:"
+          echo "$PDFIUM_LIB"
+
+
+      # ========================================================
+      # Verify PDFium
+      # ========================================================
+
+      - name: Verify PDFium
+        run: |
+          set -eux
+
+          test -f "$PDFIUM_DEVICE_LIBRARY"
+          test -f "$PDFIUM_SIMULATOR_LIBRARY"
+
+          echo
+          echo "=== Device PDFium ==="
+
+          file "$PDFIUM_DEVICE_LIBRARY"
+
+          lipo -info "$PDFIUM_DEVICE_LIBRARY"
+
+          echo
+          echo "=== Simulator PDFium ==="
+
+          file "$PDFIUM_SIMULATOR_LIBRARY"
+
+          lipo -info "$PDFIUM_SIMULATOR_LIBRARY"
+
+
+      # ========================================================
+      # Configure Device
+      # ========================================================
+
+      - name: Configure Device
+        run: |
+          set -eux
+
+          rm -rf build/device
+
+          cmake \
+            -S . \
+            -B build/device \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DPDFIUM_ROOT="$PWD/pdfium/device" \
+            -DPDFIUM_LIBRARY="$PDFIUM_DEVICE_LIBRARY"
+
+
+      # ========================================================
+      # Build Device
+      # ========================================================
+
+      - name: Build Device
+        run: |
+          set -eux
+
+          cmake \
+            --build build/device \
+            --parallel
+
+
+      # ========================================================
+      # Verify Device Wrapper
+      # ========================================================
+
+      - name: Verify Device Wrapper
+        run: |
+          set -eux
+
+          test -f \
+            build/device/libpdfium_wrapper.a
+
+          echo
+          echo "Device wrapper:"
+
+          file \
+            build/device/libpdfium_wrapper.a
+
+          echo
+          echo "Device wrapper architecture:"
+
+          lipo -info \
+            build/device/libpdfium_wrapper.a
+
+
+      # ========================================================
+      # Configure Simulator
+      # ========================================================
+
+      - name: Configure Simulator
+        run: |
+          set -eux
+
+          rm -rf build/simulator
+
+          cmake \
+            -S . \
+            -B build/simulator \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphonesimulator \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DPDFIUM_ROOT="$PWD/pdfium/simulator" \
+            -DPDFIUM_LIBRARY="$PDFIUM_SIMULATOR_LIBRARY"
+
+
+      # ========================================================
+      # Build Simulator
+      # ========================================================
+
+      - name: Build Simulator
+        run: |
+          set -eux
+
+          cmake \
+            --build build/simulator \
+            --parallel
+
+
+      # ========================================================
+      # Verify Simulator Wrapper
+      # ========================================================
+
+      - name: Verify Simulator Wrapper
+        run: |
+          set -eux
+
+          test -f \
+            build/simulator/libpdfium_wrapper.a
+
+          echo
+          echo "Simulator wrapper:"
+
+          file \
+            build/simulator/libpdfium_wrapper.a
+
+          echo
+          echo "Simulator wrapper architecture:"
+
+          lipo -info \
+            build/simulator/libpdfium_wrapper.a
+
+
+      # ========================================================
+      # Merge Device Wrapper + PDFium
+      # ========================================================
+
+      - name: Merge Device Libraries
+        run: |
+          set -eux
+
+          mkdir -p build/device/merged
+
+          libtool \
+            -static \
+            -o build/device/merged/libpdfium_wrapper.a \
+            build/device/libpdfium_wrapper.a \
+            "$PDFIUM_DEVICE_LIBRARY"
+
+          test -f \
+            build/device/merged/libpdfium_wrapper.a
+
+          echo
+          echo "Merged device library:"
+
+          file \
+            build/device/merged/libpdfium_wrapper.a
+
+
+      # ========================================================
+      # Merge Simulator Wrapper + PDFium
+      # ========================================================
+
+      - name: Merge Simulator Libraries
+        run: |
+          set -eux
+
+          mkdir -p build/simulator/merged
+
+          libtool \
+            -static \
+            -o build/simulator/merged/libpdfium_wrapper.a \
+            build/simulator/libpdfium_wrapper.a \
+            "$PDFIUM_SIMULATOR_LIBRARY"
+
+          test -f \
+            build/simulator/merged/libpdfium_wrapper.a
+
+          echo
+          echo "Merged simulator library:"
+
+          file \
+            build/simulator/merged/libpdfium_wrapper.a
+
+
+      # ========================================================
+      # Verify exported wrapper symbol
+      # ========================================================
+
+      - name: Verify Wrapper Symbols
+        run: |
+          set -eux
+
+          echo
+          echo "=== Device symbols ==="
+
+          nm \
+            build/device/merged/libpdfium_wrapper.a \
+            | grep " _pdfium_init\| pdfium_init" \
+            | head
+
+
+          echo
+          echo "=== Simulator symbols ==="
+
+          nm \
+            build/simulator/merged/libpdfium_wrapper.a \
+            | grep " _pdfium_init\| pdfium_init" \
+            | head
+
+
+      # ========================================================
+      # Create XCFramework
+      # ========================================================
+
+      - name: Create XCFramework
+        run: |
+          set -eux
+
+          rm -rf dist
+
+          mkdir -p dist
+
+          xcodebuild \
+            -create-xcframework \
+            -library \
+              build/device/merged/libpdfium_wrapper.a \
+            -library \
+              build/simulator/merged/libpdfium_wrapper.a \
+            -output \
+              dist/pdfium_wrapper.xcframework
+
+          test -d \
+            dist/pdfium_wrapper.xcframework
+
+
+      # ========================================================
+      # Verify XCFramework
+      # ========================================================
+
+      - name: Verify XCFramework
+        run: |
+          set -eux
+
+          XCFRAMEWORK="dist/pdfium_wrapper.xcframework"
+
+          test -d "$XCFRAMEWORK"
+          test -f "$XCFRAMEWORK/Info.plist"
+
+          echo
+          echo "=== XCFramework ==="
+
+          find "$XCFRAMEWORK" \
+            -maxdepth 3 \
+            -print \
+            | sort
+
+          echo
+          echo "=== Info.plist ==="
+
+          plutil \
+            -p \
+            "$XCFRAMEWORK/Info.plist"
+
+
+      # ========================================================
+      # Prepare artifact
+      #
+      # Only XCFramework is uploaded.
+      #
+      # PDFium .a files are NOT uploaded.
+      # ========================================================
+
+      - name: Prepare artifact
+        run: |
+          set -eux
+
+          mkdir -p dist-final
+
+          cp -R \
+            dist/pdfium_wrapper.xcframework \
+            dist-final/
+
+          echo
+          echo "Final artifact:"
+
+          find dist-final \
+            -maxdepth 4 \
+            -print \
+            | sort
+
+
+      # ========================================================
+      # Upload
+      # ========================================================
+
+      - name: Upload iOS XCFramework
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdfium-wrapper-ios
+          path: dist-final/
+          if-no-files-found: error

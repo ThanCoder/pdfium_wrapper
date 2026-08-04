@@ -41,7 +41,8 @@ jobs:
             build-essential \
             pkg-config \
             curl \
-            tar
+            tar \
+            llvm
 
       # ========================================================
       # Download PDFium
@@ -130,6 +131,37 @@ jobs:
           cmake \
             --build build \
             --parallel
+
+      # ========================================================
+      # Strip
+      # ========================================================
+
+      - name: Strip Wrapper
+        run: |
+          set -eux
+
+          LLVM_STRIP="$(command -v llvm-strip)"
+
+          test -x "$LLVM_STRIP"
+
+          echo "LLVM strip:"
+          "$LLVM_STRIP" --version
+
+          echo
+          echo "Before strip:"
+
+          file \
+            "build/libpdfium_wrapper.so"
+
+          "$LLVM_STRIP" \
+            --strip-unneeded \
+            "build/libpdfium_wrapper.so"
+
+          echo
+          echo "After strip:"
+
+          file \
+            "build/libpdfium_wrapper.so"
 
       # ========================================================
       # Verify Wrapper
