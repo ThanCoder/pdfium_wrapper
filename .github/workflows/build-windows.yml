@@ -1,0 +1,116 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches:
+      - main
+
+env:
+  PDFIUM_VERSION: "7988"
+
+jobs:
+
+  build:
+    name: Windows x64
+
+    runs-on: windows-latest
+
+    steps:
+
+      # ========================================================
+      # Checkout
+      # ========================================================
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ========================================================
+      # CMake
+      # ========================================================
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@latest
+
+      # ========================================================
+      # Download PDFium
+      # ========================================================
+
+      - name: Download PDFium
+        shell: pwsh
+        run: |
+
+          New-Item -ItemType Directory -Force `
+            -Path third_party/pdfium
+
+          $url = "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${env:PDFIUM_VERSION}/pdfium-win-x64.tgz"
+
+          Invoke-WebRequest `
+            -Uri $url `
+            -OutFile pdfium.tgz
+
+          tar -xzf pdfium.tgz `
+            -C third_party/pdfium
+
+      # ========================================================
+      # Inspect
+      # ========================================================
+
+      - name: Inspect PDFium
+        shell: pwsh
+        run: |
+          Get-ChildItem `
+            third_party/pdfium `
+            -Recurse
+
+      # ========================================================
+      # Configure
+      # ========================================================
+
+      - name: Configure
+        run: |
+          cmake `
+            -S . `
+            -B build `
+            -DPDFIUM_DIR="$PWD/third_party/pdfium"
+
+      # ========================================================
+      # Build
+      # ========================================================
+
+      - name: Build
+        run: |
+          cmake `
+            --build build `
+            --config Release `
+            --parallel
+
+      # ========================================================
+      # Package
+      # ========================================================
+
+      - name: Package
+        shell: pwsh
+        run: |
+
+          New-Item -ItemType Directory -Force `
+            -Path dist/windows-x64
+
+          Copy-Item `
+            build/Release/pdf_engine.dll `
+            dist/windows-x64/
+
+          Copy-Item `
+            third_party/pdfium/lib/pdfium.dll `
+            dist/windows-x64/
+
+      # ========================================================
+      # Upload
+      # ========================================================
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-engine-windows-x64
+          path: dist/windows-x64/

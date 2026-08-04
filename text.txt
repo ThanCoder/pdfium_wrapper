@@ -1,0 +1,33 @@
+# https://github.com/ThanCoder/pdfium_wrapper.git
+
+https://github.com/bblanchon/pdfium-binaries/releases/tag/chromium%2F7988
+
+
+pdfium_wrapper/
+│
+├── CMakeLists.txt
+│
+├── src/ffi/
+│   ├── ffi_wrapper.h
+│   ├── ffi_wrapper.cpp
+│   ├── page_core_wrapper.cpp
+│   ├── pdf_page_wrapper.cpp
+│   └── pdf_util_wrapper.cpp
+│
+├── src/pdf/
+│   ├── impl.cpp
+│   ├── pdf_core.hpp
+│   ├── pdf_core.cpp
+│   ├── pdf_page.hpp
+│   └── pdf_page.cpp
+│
+├── .github/
+│   └── workflows/
+│       ├── build-all.yml
+│       ├── build-linux.yml
+│       ├── build-android.yml
+│       ├── build-windows.yml
+│       ├── build-macos.yml
+│       └── build-ios.yml
+│
+└── pubspec.yaml

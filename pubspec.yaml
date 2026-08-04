@@ -1,0 +1,5 @@
+env:
+  PDFIUM_VERSION: "7988"
+
+
+  # https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F7988/

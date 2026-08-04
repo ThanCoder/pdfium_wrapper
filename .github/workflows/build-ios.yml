@@ -1,0 +1,105 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches:
+      - main
+
+env:
+  PDFIUM_VERSION: "7988"
+
+jobs:
+
+  build:
+
+    name: iOS arm64
+
+    runs-on: macos-latest
+
+    steps:
+
+      # ========================================================
+      # Checkout
+      # ========================================================
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ========================================================
+      # Download PDFium
+      # ========================================================
+
+      - name: Download PDFium
+        run: |
+
+          mkdir -p third_party/pdfium
+
+          curl -L \
+            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-ios-device-arm64.tgz" \
+            -o pdfium.tgz
+
+          tar -xzf pdfium.tgz \
+            -C third_party/pdfium
+
+      # ========================================================
+      # Inspect
+      # ========================================================
+
+      - name: Inspect PDFium
+        run: |
+          find third_party/pdfium -maxdepth 3 -type f | sort
+
+      # ========================================================
+      # Configure
+      # ========================================================
+
+      - name: Configure
+        run: |
+
+          cmake \
+            -S . \
+            -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DPDFIUM_DIR="$PWD/third_party/pdfium"
+
+      # ========================================================
+      # Build
+      # ========================================================
+
+      - name: Build
+        run: |
+
+          cmake \
+            --build build \
+            --config Release \
+            --parallel
+
+      # ========================================================
+      # Package
+      # ========================================================
+
+      - name: Package
+        run: |
+
+          mkdir -p dist/ios-arm64
+
+          cp build/libpdf_engine.a \
+            dist/ios-arm64/
+
+          cp third_party/pdfium/lib/libpdfium.a \
+            dist/ios-arm64/
+
+      # ========================================================
+      # Upload
+      # ========================================================
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-engine-ios-arm64
+          path: dist/ios-arm64/

@@ -1,0 +1,115 @@
+name: Build macOS
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches:
+      - main
+
+env:
+  PDFIUM_VERSION: "7988"
+
+jobs:
+
+  build:
+
+    name: macOS ${{ matrix.arch }}
+
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+
+          - arch: arm64
+            pdfium: pdfium-mac-arm64.tgz
+
+          - arch: x64
+            pdfium: pdfium-mac-x64.tgz
+
+    steps:
+
+      # ========================================================
+      # Checkout
+      # ========================================================
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ========================================================
+      # Download PDFium
+      # ========================================================
+
+      - name: Download PDFium
+        run: |
+
+          mkdir -p third_party/pdfium
+
+          curl -L \
+            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/${{ matrix.pdfium }}" \
+            -o pdfium.tgz
+
+          tar -xzf pdfium.tgz \
+            -C third_party/pdfium
+
+      # ========================================================
+      # Inspect
+      # ========================================================
+
+      - name: Inspect PDFium
+        run: |
+          find third_party/pdfium -maxdepth 3 -type f | sort
+
+      # ========================================================
+      # Configure
+      # ========================================================
+
+      - name: Configure
+        run: |
+
+          cmake \
+            -S . \
+            -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} \
+            -DPDFIUM_DIR="$PWD/third_party/pdfium"
+
+      # ========================================================
+      # Build
+      # ========================================================
+
+      - name: Build
+        run: |
+
+          cmake \
+            --build build \
+            --config Release \
+            --parallel
+
+      # ========================================================
+      # Package
+      # ========================================================
+
+      - name: Package
+        run: |
+
+          mkdir -p "dist/macos-${{ matrix.arch }}"
+
+          cp build/libpdf_engine.dylib \
+            "dist/macos-${{ matrix.arch }}/"
+
+          cp third_party/pdfium/lib/libpdfium.dylib \
+            "dist/macos-${{ matrix.arch }}/"
+
+      # ========================================================
+      # Upload
+      # ========================================================
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-engine-macos-${{ matrix.arch }}
+          path: dist/macos-${{ matrix.arch }}/

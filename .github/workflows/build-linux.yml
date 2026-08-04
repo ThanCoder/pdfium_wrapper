@@ -1,0 +1,118 @@
+name: Build Linux
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches:
+      - main
+
+env:
+  PDFIUM_VERSION: "7988"
+
+jobs:
+  build:
+    name: Linux x64
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # ========================================================
+      # Checkout
+      # ========================================================
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ========================================================
+      # Install
+      # ========================================================
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            g++
+
+      # ========================================================
+      # Download PDFium
+      # ========================================================
+
+      - name: Download PDFium
+        run: |
+          mkdir -p third_party/pdfium
+
+          curl -L \
+            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-linux-x64.tgz" \
+            -o pdfium.tgz
+
+          tar -xzf pdfium.tgz \
+            -C third_party/pdfium
+
+      # ========================================================
+      # Inspect PDFium
+      # ========================================================
+
+      - name: Inspect PDFium
+        run: |
+          find third_party/pdfium \
+            -maxdepth 3 \
+            -type f \
+            | sort
+
+      # ========================================================
+      # Configure
+      # ========================================================
+
+      - name: Configure
+        run: |
+          cmake \
+            -S . \
+            -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPDFIUM_DIR="$PWD/third_party/pdfium"
+
+      # ========================================================
+      # Build
+      # ========================================================
+
+      - name: Build
+        run: |
+          cmake \
+            --build build \
+            --parallel
+
+      # ========================================================
+      # Verify wrapper
+      # ========================================================
+
+      - name: Verify output
+        run: |
+          test -f build/libpdf_engine.so
+
+          echo "Wrapper library:"
+          file build/libpdf_engine.so
+
+      # ========================================================
+      # Package
+      # ========================================================
+
+      - name: Package
+        run: |
+          mkdir -p dist/linux-x64
+
+          cp build/libpdf_engine.so \
+            dist/linux-x64/libpdf_engine.so
+
+      # ========================================================
+      # Upload ONLY wrapper
+      # ========================================================
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-engine-linux-x64
+          path: dist/linux-x64/libpdf_engine.so
