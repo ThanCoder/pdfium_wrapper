@@ -3,30 +3,21 @@ name: Build Linux
 on:
   workflow_dispatch:
   workflow_call:
-  push:
-    branches:
-      - main
 
 env:
   PDFIUM_VERSION: "7988"
 
 jobs:
+
   build:
+
     name: Linux x64
     runs-on: ubuntu-latest
 
     steps:
 
-      # ========================================================
-      # Checkout
-      # ========================================================
-
       - name: Checkout
         uses: actions/checkout@v4
-
-      # ========================================================
-      # Install
-      # ========================================================
 
       - name: Install dependencies
         run: |
@@ -36,12 +27,9 @@ jobs:
             ninja-build \
             g++
 
-      # ========================================================
-      # Download PDFium
-      # ========================================================
-
       - name: Download PDFium
         run: |
+
           mkdir -p third_party/pdfium
 
           curl -L \
@@ -51,23 +39,16 @@ jobs:
           tar -xzf pdfium.tgz \
             -C third_party/pdfium
 
-      # ========================================================
-      # Inspect PDFium
-      # ========================================================
-
       - name: Inspect PDFium
         run: |
           find third_party/pdfium \
-            -maxdepth 3 \
+            -maxdepth 4 \
             -type f \
             | sort
 
-      # ========================================================
-      # Configure
-      # ========================================================
-
       - name: Configure
         run: |
+
           cmake \
             -S . \
             -B build \
@@ -75,44 +56,32 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DPDFIUM_DIR="$PWD/third_party/pdfium"
 
-      # ========================================================
-      # Build
-      # ========================================================
-
       - name: Build
         run: |
+
           cmake \
             --build build \
             --parallel
 
-      # ========================================================
-      # Verify wrapper
-      # ========================================================
-
-      - name: Verify output
+      - name: Verify
         run: |
-          test -f build/libpdf_engine.so
 
-          echo "Wrapper library:"
-          file build/libpdf_engine.so
+          test -f build/libpdfium_wrapper.so
 
-      # ========================================================
-      # Package
-      # ========================================================
+          file \
+            build/libpdfium_wrapper.so
 
       - name: Package
         run: |
+
           mkdir -p dist/linux-x64
 
-          cp build/libpdf_engine.so \
-            dist/linux-x64/libpdf_engine.so
+          cp \
+            build/libpdfium_wrapper.so \
+            dist/linux-x64/
 
-      # ========================================================
-      # Upload ONLY wrapper
-      # ========================================================
-
-      - name: Upload artifact
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: pdf-engine-linux-x64
-          path: dist/linux-x64/libpdf_engine.so
+          name: pdfium-wrapper-linux-x64
+          path: dist/linux-x64/libpdfium_wrapper.so

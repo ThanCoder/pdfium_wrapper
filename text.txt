@@ -7,19 +7,20 @@ pdfium_wrapper/
 │
 ├── CMakeLists.txt
 │
-├── src/ffi/
-│   ├── ffi_wrapper.h
-│   ├── ffi_wrapper.cpp
-│   ├── page_core_wrapper.cpp
-│   ├── pdf_page_wrapper.cpp
-│   └── pdf_util_wrapper.cpp
-│
-├── src/pdf/
-│   ├── impl.cpp
-│   ├── pdf_core.hpp
-│   ├── pdf_core.cpp
-│   ├── pdf_page.hpp
-│   └── pdf_page.cpp
+├── src/
+│   ├── ffi/
+│   │   ├── ffi_wrapper.h
+│   │   ├── ffi_wrapper.cpp
+│   │   ├── page_core_wrapper.cpp
+│   │   ├── pdf_page_wrapper.cpp
+│   │   └── pdf_util_wrapper.cpp
+│   │
+│   └── pdf/
+│       ├── impl.cpp
+│       ├── pdf_core.hpp
+│       ├── pdf_core.cpp
+│       ├── pdf_page.hpp
+│       └── pdf_page.cpp
 │
 ├── .github/
 │   └── workflows/

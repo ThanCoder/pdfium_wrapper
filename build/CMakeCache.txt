@@ -116,7 +116,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=pdf_engine
+CMAKE_PROJECT_NAME:STATIC=pdfium_wrapper
 
 //Flags used by the linker during the creation of shared libraries
 // during all build types.
@@ -172,13 +172,13 @@ CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
 //Value Computed by CMake
-pdf_engine_BINARY_DIR:STATIC=/home/thancoder/projects/cpp_projs/pdfium_wrapper/build
+pdfium_wrapper_BINARY_DIR:STATIC=/home/thancoder/projects/cpp_projs/pdfium_wrapper/build
 
 //Value Computed by CMake
-pdf_engine_IS_TOP_LEVEL:STATIC=ON
+pdfium_wrapper_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
-pdf_engine_SOURCE_DIR:STATIC=/home/thancoder/projects/cpp_projs/pdfium_wrapper
+pdfium_wrapper_SOURCE_DIR:STATIC=/home/thancoder/projects/cpp_projs/pdfium_wrapper
 
 
 ########################

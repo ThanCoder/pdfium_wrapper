@@ -70,8 +70,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-JWkwtg"
-      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-JWkwtg"
+      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-5D9L7a"
+      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-5D9L7a"
     cmakeVariables:
       CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-19"
       CMAKE_CXX_FLAGS: ""
@@ -82,13 +82,13 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-JWkwtg'
+        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-5D9L7a'
         
-        Run Build Command(s): /usr/bin/ninja -v cmTC_ee829
-        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_ee829.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp
-        [2/2] : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_ee829.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_ee829   && :
-        FAILED: cmTC_ee829 
-        : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_ee829.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_ee829   && :
+        Run Build Command(s): /usr/bin/ninja -v cmTC_dff93
+        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_dff93.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp
+        [2/2] : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_dff93.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_dff93   && :
+        FAILED: cmTC_dff93 
+        : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_dff93.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_dff93   && :
         /usr/bin/ld: Error: unable to disambiguate: -nologo (did you mean --nologo ?)
         clang-cl-19: error: linker command failed with exit code 1 (use -v to see invocation)
         ninja: build stopped: subcommand failed.
@@ -102,8 +102,8 @@ events:
     checks:
       - "Check for working CXX compiler: /usr/bin/clang-cl-19"
     directories:
-      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-G1u9a6"
-      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-G1u9a6"
+      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Jx9vTa"
+      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Jx9vTa"
     cmakeVariables:
       CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-19"
       CMAKE_CXX_FLAGS: ""
@@ -114,13 +114,13 @@ events:
       variable: "CMAKE_CXX_COMPILER_WORKS"
       cached: true
       stdout: |
-        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-G1u9a6'
+        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Jx9vTa'
         
-        Run Build Command(s): /usr/bin/ninja -v cmTC_f2826
-        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_f2826.dir/testCXXCompiler.cxx.o -c /home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-G1u9a6/testCXXCompiler.cxx
-        [2/2] : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_f2826.dir/testCXXCompiler.cxx.o -o cmTC_f2826   && :
-        FAILED: cmTC_f2826 
-        : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_f2826.dir/testCXXCompiler.cxx.o -o cmTC_f2826   && :
+        Run Build Command(s): /usr/bin/ninja -v cmTC_0b73e
+        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_0b73e.dir/testCXXCompiler.cxx.o -c /home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Jx9vTa/testCXXCompiler.cxx
+        [2/2] : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_0b73e.dir/testCXXCompiler.cxx.o -o cmTC_0b73e   && :
+        FAILED: cmTC_0b73e 
+        : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_0b73e.dir/testCXXCompiler.cxx.o -o cmTC_0b73e   && :
         /usr/bin/ld: Error: unable to disambiguate: -nologo (did you mean --nologo ?)
         clang-cl-19: error: linker command failed with exit code 1 (use -v to see invocation)
         ninja: build stopped: subcommand failed.
@@ -192,8 +192,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-kceKA9"
-      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-kceKA9"
+      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-PVnGed"
+      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-PVnGed"
     cmakeVariables:
       CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-19"
       CMAKE_CXX_FLAGS: ""
@@ -204,13 +204,13 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-kceKA9'
+        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-PVnGed'
         
-        Run Build Command(s): /usr/bin/ninja -v cmTC_4cedd
-        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_4cedd.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp
-        [2/2] : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_4cedd.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_4cedd   && :
-        FAILED: cmTC_4cedd 
-        : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_4cedd.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_4cedd   && :
+        Run Build Command(s): /usr/bin/ninja -v cmTC_1460a
+        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_1460a.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp
+        [2/2] : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_1460a.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_1460a   && :
+        FAILED: cmTC_1460a 
+        : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_1460a.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_1460a   && :
         /usr/bin/ld: Error: unable to disambiguate: -nologo (did you mean --nologo ?)
         clang-cl-19: error: linker command failed with exit code 1 (use -v to see invocation)
         ninja: build stopped: subcommand failed.
@@ -224,8 +224,8 @@ events:
     checks:
       - "Check for working CXX compiler: /usr/bin/clang-cl-19"
     directories:
-      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-7X1hNO"
-      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-7X1hNO"
+      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Y2BFkH"
+      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Y2BFkH"
     cmakeVariables:
       CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-19"
       CMAKE_CXX_FLAGS: ""
@@ -236,13 +236,13 @@ events:
       variable: "CMAKE_CXX_COMPILER_WORKS"
       cached: true
       stdout: |
-        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-7X1hNO'
+        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Y2BFkH'
         
-        Run Build Command(s): /usr/bin/ninja -v cmTC_7fc52
-        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_7fc52.dir/testCXXCompiler.cxx.o -c /home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-7X1hNO/testCXXCompiler.cxx
-        [2/2] : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_7fc52.dir/testCXXCompiler.cxx.o -o cmTC_7fc52   && :
-        FAILED: cmTC_7fc52 
-        : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_7fc52.dir/testCXXCompiler.cxx.o -o cmTC_7fc52   && :
+        Run Build Command(s): /usr/bin/ninja -v cmTC_1e4ff
+        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_1e4ff.dir/testCXXCompiler.cxx.o -c /home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Y2BFkH/testCXXCompiler.cxx
+        [2/2] : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_1e4ff.dir/testCXXCompiler.cxx.o -o cmTC_1e4ff   && :
+        FAILED: cmTC_1e4ff 
+        : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_1e4ff.dir/testCXXCompiler.cxx.o -o cmTC_1e4ff   && :
         /usr/bin/ld: Error: unable to disambiguate: -nologo (did you mean --nologo ?)
         clang-cl-19: error: linker command failed with exit code 1 (use -v to see invocation)
         ninja: build stopped: subcommand failed.
@@ -314,8 +314,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Z1Sv9u"
-      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Z1Sv9u"
+      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-ZlsYY5"
+      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-ZlsYY5"
     cmakeVariables:
       CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-19"
       CMAKE_CXX_FLAGS: ""
@@ -326,13 +326,13 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-Z1Sv9u'
+        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-ZlsYY5'
         
-        Run Build Command(s): /usr/bin/ninja -v cmTC_0965d
-        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_0965d.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp
-        [2/2] : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_0965d.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_0965d   && :
-        FAILED: cmTC_0965d 
-        : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_0965d.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_0965d   && :
+        Run Build Command(s): /usr/bin/ninja -v cmTC_b60a6
+        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_b60a6.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp
+        [2/2] : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_b60a6.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_b60a6   && :
+        FAILED: cmTC_b60a6 
+        : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_b60a6.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_b60a6   && :
         /usr/bin/ld: Error: unable to disambiguate: -nologo (did you mean --nologo ?)
         clang-cl-19: error: linker command failed with exit code 1 (use -v to see invocation)
         ninja: build stopped: subcommand failed.
@@ -346,8 +346,8 @@ events:
     checks:
       - "Check for working CXX compiler: /usr/bin/clang-cl-19"
     directories:
-      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-BVtiOg"
-      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-BVtiOg"
+      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-rhhjDa"
+      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-rhhjDa"
     cmakeVariables:
       CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-19"
       CMAKE_CXX_FLAGS: ""
@@ -358,15 +358,138 @@ events:
       variable: "CMAKE_CXX_COMPILER_WORKS"
       cached: true
       stdout: |
-        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-BVtiOg'
+        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-rhhjDa'
         
-        Run Build Command(s): /usr/bin/ninja -v cmTC_7e18c
-        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_7e18c.dir/testCXXCompiler.cxx.o -c /home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-BVtiOg/testCXXCompiler.cxx
-        [2/2] : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_7e18c.dir/testCXXCompiler.cxx.o -o cmTC_7e18c   && :
-        FAILED: cmTC_7e18c 
-        : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_7e18c.dir/testCXXCompiler.cxx.o -o cmTC_7e18c   && :
+        Run Build Command(s): /usr/bin/ninja -v cmTC_dc692
+        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_dc692.dir/testCXXCompiler.cxx.o -c /home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-rhhjDa/testCXXCompiler.cxx
+        [2/2] : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_dc692.dir/testCXXCompiler.cxx.o -o cmTC_dc692   && :
+        FAILED: cmTC_dc692 
+        : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_dc692.dir/testCXXCompiler.cxx.o -o cmTC_dc692   && :
         /usr/bin/ld: Error: unable to disambiguate: -nologo (did you mean --nologo ?)
         clang-cl-19: error: linker command failed with exit code 1 (use -v to see invocation)
         ninja: build stopped: subcommand failed.
         
       exitCode: 1
+...
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+      Compiler: /usr/bin/clang-cl-19 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      1
+      /usr/bin/ld: Error: unable to disambiguate: -nologo (did you mean --nologo ?)
+      clang-cl-19: error: linker command failed with exit code 1 (use -v to see invocation)
+      
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /usr/bin/clang-cl-19 
+      Build flags: 
+      Id flags: -c 
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.obj"
+      
+      The CXX compiler identification is Clang, found in:
+        /home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/3.31.6/CompilerIdCXX/CMakeCXXCompilerId.obj
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:1288 (message)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerId.cmake:250 (CMAKE_DETERMINE_MSVC_SHOWINCLUDES_PREFIX)"
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:3 (project)"
+    message: |
+      Detecting CXX compiler /showIncludes prefix:
+        Note: including file: ./foo.h
+        
+      Found prefix "Note: including file: "
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeDetermineCompilerABI.cmake:74 (try_compile)"
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:3 (project)"
+    checks:
+      - "Detecting CXX compiler ABI info"
+    directories:
+      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-yYNJ0W"
+      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-yYNJ0W"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-19"
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: ""
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-yYNJ0W'
+        
+        Run Build Command(s): /usr/bin/ninja -v cmTC_a5291
+        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_a5291.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.31/Modules/CMakeCXXCompilerABI.cpp
+        [2/2] : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_a5291.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_a5291   && :
+        FAILED: cmTC_a5291 
+        : && /usr/bin/clang-cl-19  -Wl,-v CMakeFiles/cmTC_a5291.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_a5291   && :
+        /usr/bin/ld: Error: unable to disambiguate: -nologo (did you mean --nologo ?)
+        clang-cl-19: error: linker command failed with exit code 1 (use -v to see invocation)
+        ninja: build stopped: subcommand failed.
+        
+      exitCode: 1
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.31/Modules/CMakeTestCXXCompiler.cmake:56 (try_compile)"
+      - "CMakeLists.txt:3 (project)"
+    checks:
+      - "Check for working CXX compiler: /usr/bin/clang-cl-19"
+    directories:
+      source: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-RqBOED"
+      binary: "/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-RqBOED"
+    cmakeVariables:
+      CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS: "/usr/bin/clang-scan-deps-19"
+      CMAKE_CXX_FLAGS: ""
+      CMAKE_CXX_FLAGS_DEBUG: ""
+      CMAKE_CXX_SCAN_FOR_MODULES: "OFF"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_CXX_COMPILER_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: '/home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-RqBOED'
+        
+        Run Build Command(s): /usr/bin/ninja -v cmTC_526e5
+        [1/2] /usr/bin/clang-cl-19    -o CMakeFiles/cmTC_526e5.dir/testCXXCompiler.cxx.o -c /home/thancoder/projects/cpp_projs/pdfium_wrapper/build/CMakeFiles/CMakeScratch/TryCompile-RqBOED/testCXXCompiler.cxx
+        [2/2] : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_526e5.dir/testCXXCompiler.cxx.o -o cmTC_526e5   && :
+        FAILED: cmTC_526e5 
+        : && /usr/bin/clang-cl-19   CMakeFiles/cmTC_526e5.dir/testCXXCompiler.cxx.o -o cmTC_526e5   && :
+        /usr/bin/ld: Error: unable to disambiguate: -nologo (did you mean --nologo ?)
+        clang-cl-19: error: linker command failed with exit code 1 (use -v to see invocation)
+        ninja: build stopped: subcommand failed.
+        
+      exitCode: 1
+...
