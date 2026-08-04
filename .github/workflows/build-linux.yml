@@ -15,23 +15,24 @@ jobs:
   build-linux-arm64:
     name: Linux ARM64
 
-    # GitHub-hosted ARM64 runner
     runs-on: ubuntu-24.04-arm
 
     steps:
-      # --------------------------------------------------------
+      # ========================================================
       # Checkout
-      # --------------------------------------------------------
+      # ========================================================
 
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
-      # Install dependencies
-      # --------------------------------------------------------
+      # ========================================================
+      # Dependencies
+      # ========================================================
 
       - name: Install dependencies
         run: |
+          set -eux
+
           sudo apt-get update
 
           sudo apt-get install -y \
@@ -42,64 +43,70 @@ jobs:
             curl \
             tar
 
-      # --------------------------------------------------------
-      # Download PDFium ARM64
-      # --------------------------------------------------------
+      # ========================================================
+      # Download PDFium
+      # ========================================================
 
       - name: Download PDFium
         run: |
           set -eux
-
-          PDFIUM_URL="https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-linux-arm64.tgz"
-
-          echo "Downloading:"
-          echo "$PDFIUM_URL"
 
           curl \
             --fail \
             --location \
             --retry 3 \
             --retry-delay 2 \
-            "$PDFIUM_URL" \
-            --output pdfium.tgz
+            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-linux-arm64.tgz" \
+            -o pdfium.tgz
 
-      # --------------------------------------------------------
+      # ========================================================
       # Extract PDFium
-      # --------------------------------------------------------
+      #
+      # Result:
+      #
+      # pdfium/
+      # └── lib/
+      #     ├── libpdfium.so
+      #     └── *.so
+      #
+      # ========================================================
 
       - name: Extract PDFium
         run: |
           set -eux
 
+          mkdir -p pdfium
+
           tar \
-            -xzf pdfium.tgz
+            -xzf pdfium.tgz \
+            -C pdfium
 
           rm -f pdfium.tgz
 
           echo "PDFium files:"
-          find pdfium-linux-arm64 -maxdepth 2 -type f | sort
+          find pdfium -maxdepth 2 -type f -print
 
-      # --------------------------------------------------------
+      # ========================================================
       # Verify PDFium
-      # --------------------------------------------------------
+      # ========================================================
 
       - name: Verify PDFium
         run: |
           set -eux
 
           test -f \
-            "pdfium-linux-arm64/lib/libpdfium.so"
+            "pdfium/lib/libpdfium.so"
 
           file \
-            "pdfium-linux-arm64/lib/libpdfium.so"
+            "pdfium/lib/libpdfium.so"
 
           nm -D \
-            "pdfium-linux-arm64/lib/libpdfium.so" \
+            "pdfium/lib/libpdfium.so" \
             | grep "FPDF_InitLibrary"
 
-      # --------------------------------------------------------
-      # Configure
-      # --------------------------------------------------------
+      # ========================================================
+      # Configure CMake
+      # ========================================================
 
       - name: Configure CMake
         run: |
@@ -110,11 +117,11 @@ jobs:
             -B build \
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DPDFIUM_ROOT="$PWD/pdfium-linux-arm64"
+            -DPDFIUM_ROOT="$PWD/pdfium"
 
-      # --------------------------------------------------------
+      # ========================================================
       # Build
-      # --------------------------------------------------------
+      # ========================================================
 
       - name: Build
         run: |
@@ -124,11 +131,11 @@ jobs:
             --build build \
             --parallel
 
-      # --------------------------------------------------------
-      # Verify wrapper
-      # --------------------------------------------------------
+      # ========================================================
+      # Verify Wrapper
+      # ========================================================
 
-      - name: Verify wrapper
+      - name: Verify Wrapper
         run: |
           set -eux
 
@@ -138,45 +145,57 @@ jobs:
           file \
             "build/libpdfium_wrapper.so"
 
+          echo
+          echo "Exported symbols:"
           nm -D \
             "build/libpdfium_wrapper.so" \
             | grep " pdfium_init$"
 
+          echo
+          echo "RPATH / RUNPATH:"
           readelf -d \
             "build/libpdfium_wrapper.so" \
             | grep -E 'RPATH|RUNPATH'
 
-      # --------------------------------------------------------
-      # Package
-      # --------------------------------------------------------
+      # ========================================================
+      # Prepare artifact
+      #
+      # Final:
+      #
+      # dist/
+      # └── lib/
+      #     ├── libpdfium_wrapper.so
+      #     ├── libpdfium.so
+      #     └── *.so
+      #
+      # ========================================================
 
-      - name: Prepare package
+      - name: Prepare artifact
         run: |
           set -eux
 
           mkdir -p dist/lib
 
-          # Wrapper
           cp \
             build/libpdfium_wrapper.so \
             dist/lib/
 
-          # PDFium + dependencies
           cp \
-            pdfium-linux-arm64/lib/*.so \
+            pdfium/lib/*.so \
             dist/lib/
 
-          echo "Package contents:"
-          find dist -type f -maxdepth 3 | sort
+          echo "Artifact:"
+          find dist -type f -print | sort
 
-      # --------------------------------------------------------
-      # Verify architecture
-      # --------------------------------------------------------
+      # ========================================================
+      # Verify artifact
+      # ========================================================
 
-      - name: Verify package
+      - name: Verify artifact
         run: |
           set -eux
 
+          echo "Libraries:"
           file dist/lib/*.so
 
           echo
@@ -184,13 +203,14 @@ jobs:
           ldd dist/lib/libpdfium_wrapper.so
 
           echo
-          echo "Exported wrapper symbols:"
-          nm -D dist/lib/libpdfium_wrapper.so \
-            | grep -E ' pdfium_init$'
+          echo "Wrapper symbols:"
+          nm -D \
+            dist/lib/libpdfium_wrapper.so \
+            | grep " pdfium_init$"
 
-      # --------------------------------------------------------
-      # Upload artifact
-      # --------------------------------------------------------
+      # ========================================================
+      # Upload
+      # ========================================================
 
       - name: Upload Linux ARM64 artifact
         uses: actions/upload-artifact@v4
