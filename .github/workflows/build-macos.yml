@@ -1,4 +1,3 @@
-
 name: Build PDFium Wrapper - macOS ARM64
 
 on:
@@ -19,8 +18,18 @@ jobs:
     runs-on: macos-14
 
     steps:
+
+      # ========================================================
+      # Checkout
+      # ========================================================
+
       - name: Checkout
         uses: actions/checkout@v4
+
+
+      # ========================================================
+      # Dependencies
+      # ========================================================
 
       - name: Install dependencies
         run: |
@@ -29,6 +38,11 @@ jobs:
           brew install \
             cmake \
             ninja
+
+
+      # ========================================================
+      # Download PDFium
+      # ========================================================
 
       - name: Download PDFium
         run: |
@@ -42,6 +56,13 @@ jobs:
             "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-mac-arm64.tgz" \
             -o pdfium.tgz
 
+          test -f pdfium.tgz
+
+
+      # ========================================================
+      # Extract PDFium
+      # ========================================================
+
       - name: Extract PDFium
         run: |
           set -eux
@@ -54,19 +75,62 @@ jobs:
 
           rm -f pdfium.tgz
 
-          find pdfium -maxdepth 2 -type f -print
+          echo
+          echo "=== PDFium files ==="
+
+          find pdfium \
+            -type f \
+            -print \
+            | sort
+
+
+      # ========================================================
+      # Locate PDFium
+      # ========================================================
+
+      - name: Locate PDFium
+        run: |
+          set -eux
+
+          PDFIUM_LIB="$(
+            find "$PWD/pdfium" \
+              -type f \
+              -name "libpdfium.dylib" \
+              -print \
+              -quit
+          )"
+
+          test -n "$PDFIUM_LIB"
+          test -f "$PDFIUM_LIB"
+
+          echo "PDFIUM_LIBRARY=$PDFIUM_LIB" >> "$GITHUB_ENV"
+
+          echo
+          echo "PDFium library:"
+          echo "$PDFIUM_LIB"
+
+
+      # ========================================================
+      # Verify PDFium
+      # ========================================================
 
       - name: Verify PDFium
         run: |
           set -eux
 
-          test -f pdfium/lib/libpdfium.dylib
+          test -f "$PDFIUM_LIBRARY"
 
-          file pdfium/lib/libpdfium.dylib
+          file \
+            "$PDFIUM_LIBRARY"
 
           nm -gU \
-            pdfium/lib/libpdfium.dylib \
+            "$PDFIUM_LIBRARY" \
             | grep "_FPDF_InitLibrary"
+
+
+      # ========================================================
+      # Configure CMake
+      # ========================================================
 
       - name: Configure CMake
         run: |
@@ -78,7 +142,13 @@ jobs:
             -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DPDFIUM_ROOT="$PWD/pdfium"
+            -DPDFIUM_ROOT="$PWD/pdfium" \
+            -DPDFIUM_LIBRARY="$PDFIUM_LIBRARY"
+
+
+      # ========================================================
+      # Build
+      # ========================================================
 
       - name: Build
         run: |
@@ -88,30 +158,93 @@ jobs:
             --build build \
             --parallel
 
+
+      # ========================================================
+      # Verify Wrapper
+      # ========================================================
+
       - name: Verify Wrapper
         run: |
           set -eux
 
-          test -f build/libpdfium_wrapper.dylib
+          test -f \
+            build/libpdfium_wrapper.dylib
 
-          file build/libpdfium_wrapper.dylib
+          echo
+          echo "Wrapper:"
+
+          file \
+            build/libpdfium_wrapper.dylib
+
+          echo
+          echo "Exported symbols:"
 
           nm -gU \
             build/libpdfium_wrapper.dylib \
             | grep "_pdfium_init"
 
+
+      # ========================================================
+      # Prepare artifact
+      #
+      # Only wrapper is uploaded.
+      # PDFium dylib is intentionally NOT uploaded.
+      # ========================================================
+
       - name: Prepare artifact
         run: |
           set -eux
 
-          mkdir -p dist
+          mkdir -p dist/lib
 
           cp \
             build/libpdfium_wrapper.dylib \
-            dist/
+            dist/lib/
 
+          # PDFium dylib intentionally NOT uploaded.
+          #
+          # cp \
+          #   "$PDFIUM_LIBRARY" \
+          #   dist/lib/
+
+          echo
           echo "Artifact:"
-          find dist -type f -print
+
+          find dist \
+            -type f \
+            -print \
+            | sort
+
+
+      # ========================================================
+      # Verify artifact
+      # ========================================================
+
+      - name: Verify artifact
+        run: |
+          set -eux
+
+          test -f \
+            dist/lib/libpdfium_wrapper.dylib
+
+          echo
+          echo "Artifact files:"
+
+          find dist \
+            -type f \
+            -print \
+            | sort
+
+          echo
+          echo "Wrapper:"
+
+          file \
+            dist/lib/libpdfium_wrapper.dylib
+
+
+      # ========================================================
+      # Upload
+      # ========================================================
 
       - name: Upload macOS ARM64
         uses: actions/upload-artifact@v4
@@ -119,4 +252,3 @@ jobs:
           name: pdfium-wrapper-macos-arm64
           path: dist/
           if-no-files-found: error
-
