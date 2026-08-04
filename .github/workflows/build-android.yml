@@ -1,0 +1,144 @@
+name: Build PDFium Wrapper - Android
+
+on:
+  workflow_dispatch:
+    inputs:
+      pdfium_version:
+        description: PDFium Chromium version
+        required: false
+        default: "7988"
+
+env:
+  PDFIUM_VERSION: ${{ inputs.pdfium_version }}
+
+jobs:
+  build-android:
+    name: Android ${{ matrix.arch }}
+
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        include:
+          - arch: arm
+            pdfium_arch: arm
+            abi: armeabi-v7a
+          - arch: arm64
+            pdfium_arch: arm64
+            abi: arm64-v8a
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: |
+          set -eux
+
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0" \
+            "ndk;27.0.12077973"
+
+      - name: Download PDFium
+        run: |
+          set -eux
+
+          curl \
+            --fail \
+            --location \
+            --retry 3 \
+            --retry-delay 2 \
+            "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_VERSION}/pdfium-android-${{ matrix.pdfium_arch }}.tgz" \
+            -o pdfium.tgz
+
+      - name: Extract PDFium
+        run: |
+          set -eux
+
+          mkdir -p pdfium
+
+          tar \
+            -xzf pdfium.tgz \
+            -C pdfium
+
+          rm -f pdfium.tgz
+
+          find pdfium -maxdepth 2 -type f -print
+
+      - name: Verify PDFium
+        run: |
+          set -eux
+
+          test -f pdfium/lib/libpdfium.so
+
+          file pdfium/lib/libpdfium.so
+
+          nm -D \
+            pdfium/lib/libpdfium.so \
+            | grep "FPDF_InitLibrary"
+
+      - name: Configure CMake
+        run: |
+          set -eux
+
+          cmake \
+            -S . \
+            -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI="${{ matrix.abi }}" \
+            -DANDROID_PLATFORM=android-21 \
+            -DPDFIUM_ROOT="$PWD/pdfium"
+
+      - name: Build
+        run: |
+          set -eux
+
+          cmake \
+            --build build \
+            --parallel
+
+      - name: Verify Wrapper
+        run: |
+          set -eux
+
+          test -f build/libpdfium_wrapper.so
+
+          file build/libpdfium_wrapper.so
+
+          nm -D \
+            build/libpdfium_wrapper.so \
+            | grep " pdfium_init$"
+
+      - name: Prepare artifact
+        run: |
+          set -eux
+
+          mkdir -p dist
+
+          cp \
+            build/libpdfium_wrapper.so \
+            dist/
+
+          echo "Artifact:"
+          find dist -type f -print
+
+      - name: Upload Android ARM ${{ matrix.arch }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdfium-wrapper-android-${{ matrix.arch }}
+          path: dist/
+          if-no-files-found: error
+

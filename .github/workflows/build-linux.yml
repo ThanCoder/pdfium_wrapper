@@ -164,9 +164,9 @@ jobs:
       #
       # dist/
       # └── lib/
-      #     ├── libpdfium_wrapper.so
-      #     ├── libpdfium.so
-      #     └── *.so
+      #     └── libpdfium_wrapper.so
+      #
+      # PDFium libraries are intentionally NOT uploaded.
       #
       # ========================================================
 
@@ -180,9 +180,11 @@ jobs:
             build/libpdfium_wrapper.so \
             dist/lib/
 
-          cp \
-            pdfium/lib/*.so \
-            dist/lib/
+          # PDFium libraries are intentionally NOT uploaded.
+          #
+          # cp \
+          #   pdfium/lib/*.so \
+          #   dist/lib/
 
           echo "Artifact:"
           find dist -type f -print | sort

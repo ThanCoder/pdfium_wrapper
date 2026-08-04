@@ -1,0 +1,109 @@
+
+name: Build PDFium Wrapper - Windows x64
+
+on:
+  workflow_dispatch:
+    inputs:
+      pdfium_version:
+        description: PDFium Chromium version
+        required: false
+        default: "7988"
+
+env:
+  PDFIUM_VERSION: ${{ inputs.pdfium_version }}
+
+jobs:
+  build-windows-x64:
+    name: Windows x64
+
+    runs-on: windows-2025
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          choco install cmake ninja -y
+
+      - name: Download PDFium
+        shell: pwsh
+        run: |
+          $url = "https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${env:PDFIUM_VERSION}/pdfium-win-x64.tgz"
+
+          curl.exe `
+            --fail `
+            --location `
+            --retry 3 `
+            --retry-delay 2 `
+            $url `
+            -o pdfium.tgz
+
+      - name: Extract PDFium
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force pdfium | Out-Null
+
+          tar.exe `
+            -xzf pdfium.tgz `
+            -C pdfium
+
+          Remove-Item pdfium.tgz
+
+          Get-ChildItem pdfium -Recurse
+
+      - name: Verify PDFium
+        shell: pwsh
+        run: |
+          if (!(Test-Path "pdfium/lib/pdfium.dll")) {
+            throw "pdfium.dll not found"
+          }
+
+          Get-Item pdfium/lib/pdfium.dll
+
+      - name: Configure CMake
+        shell: pwsh
+        run: |
+          cmake `
+            -S . `
+            -B build `
+            -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DPDFIUM_ROOT="$PWD/pdfium"
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake `
+            --build build `
+            --parallel
+
+      - name: Verify Wrapper
+        shell: pwsh
+        run: |
+          if (!(Test-Path "build/pdfium_wrapper.dll")) {
+            throw "pdfium_wrapper.dll not found"
+          }
+
+          dumpbin /exports build/pdfium_wrapper.dll |
+            Select-String "pdfium_init"
+
+      - name: Prepare artifact
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+
+          Copy-Item `
+            build/pdfium_wrapper.dll `
+            dist/
+
+          Get-ChildItem dist
+
+      - name: Upload Windows x64
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdfium-wrapper-windows-x64
+          path: dist/
+          if-no-files-found: error
+
